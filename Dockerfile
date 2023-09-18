@@ -17,10 +17,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     git \
-    unzip \
     mcrypt \
+    unzip \
     wget \
     curl \
+    gnupg \
     openssl \
     ssh \
     locales \
@@ -29,6 +30,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     mysql-server \
     redis-server \
     npm
+
+# add node-dependency
+RUN mkdir -p /etc/apt/keyrings && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 
 # add yarn-dependency
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
@@ -39,6 +44,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     yarn \
+    nodejs \
     php-pear php7.4-mysql php7.4-zip php7.4-xml php7.4-mbstring php7.4-curl php7.4-json php7.4-pdo php7.4-tokenizer php7.4-cli php7.4-imap php7.4-intl php7.4-gd php7.4-xdebug php7.4-soap php7.4-gmp php-imagick \
     apache2 libapache2-mod-php7.4 \
     --no-install-recommends
@@ -46,21 +52,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# install phive
-RUN wget -O phive.phar "https://phar.io/releases/phive.phar" && \
-    wget -O phive.phar.asc "https://phar.io/releases/phive.phar.asc" && \
-    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys 0x9D8A98B29B2D5D79 && \
-    gpg --verify phive.phar.asc phive.phar && \
-    rm phive.phar.asc && \
-    chmod +x phive.phar && \
-    mv phive.phar /usr/local/bin/phive
-
 # final clean up
 RUN DEBIAN_FRONTEND=noninteractive apt-get clean -y && \
     DEBIAN_FRONTEND=noninteractive apt-get autoremove -y && \
     DEBIAN_FRONTEND=noninteractive apt-get autoclean -y && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    rm /var/lib/mysql/ib_logfile*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # RUN systemctl start redis-server && \
 #     systemctl enable redis-server
